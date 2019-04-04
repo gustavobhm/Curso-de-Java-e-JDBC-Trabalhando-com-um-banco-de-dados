@@ -9,25 +9,40 @@ import java.sql.Statement;
 public class TestaInsercao {
 
 	public static void main(String[] args) throws SQLException {
-		String nome = "Notebook";
-		String descricao = "Notebook i5";
-		Connection connection = Database.getConnection();
-		
-		String sql = "insert into produto (nome, descricao) values (?, ?)";
-		PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+		try (Connection connection = Database.getConnection()) {
+			connection.setAutoCommit(false);
+			String sql = "insert into produto (nome, descricao) values (?, ?)";
+			try (PreparedStatement statement = connection.prepareStatement(sql,
+					Statement.RETURN_GENERATED_KEYS)) {
+				adiciona("TV LCD", "32 polegadas", statement);
+				adiciona("Blueray", "Full HDMI", statement);
+
+				connection.commit();
+				statement.close();
+			} catch (Exception e) {
+				connection.rollback();
+				System.out.println("Rollback efetuado");
+				e.printStackTrace();
+			}
+		}
+	}
+
+	private static void adiciona(String nome, String descricao,
+			PreparedStatement statement) throws SQLException {
+		if (nome.equals("Blueray")) {
+			throw new IllegalArgumentException("Problema ocorrido");
+		}
 		statement.setString(1, nome);
 		statement.setString(2, descricao);
 		boolean resultado = statement.execute();
 		System.out.println(resultado);
-		ResultSet generatedKeys = statement.getGeneratedKeys();
-		
-		while(generatedKeys.next()) {
-			long id = generatedKeys.getLong("id");
-			System.out.println("id gerado: " + id);
+		try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
+			while (generatedKeys.next()) {
+				long id = generatedKeys.getLong("id");
+				System.out.println("id gerado: " + id);
+			}
 		}
-		
-		generatedKeys.close();
-		statement.close();
-		connection.close();
 	}
 }
+
+
