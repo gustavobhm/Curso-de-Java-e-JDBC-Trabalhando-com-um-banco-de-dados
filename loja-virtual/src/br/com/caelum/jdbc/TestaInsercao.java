@@ -9,7 +9,7 @@ import java.sql.Statement;
 public class TestaInsercao {
 
 	public static void main(String[] args) throws SQLException {
-		try (Connection connection = Database.getConnection()) {
+		try (Connection connection = new ConnectionPool().getConnection()) {
 			connection.setAutoCommit(false);
 			String sql = "insert into produto (nome, descricao) values (?, ?)";
 			try (PreparedStatement statement = connection.prepareStatement(sql,
@@ -44,5 +44,3 @@ public class TestaInsercao {
 		}
 	}
 }
-
-
